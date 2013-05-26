@@ -8,7 +8,7 @@
 using namespace std;
 
 int DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x,int y);
-void drawFrameSet(int framesetId,int step,MPI_Status status);
+void renderFrameSet(int framesetId,int step,MPI_Status status);
 double* f(double x,double y); 
 double* g(double x,double y); 
 double* h(double x,double y); 
@@ -35,10 +35,7 @@ int main(int argc, char *argv[])
  MPI_Comm_size(MPI_COMM_WORLD,&size);
  MPI_Get_processor_name(name,&len);
 
-
-srand(time(0));
-
-////////////////////////
+ srand(time(0));
 
 
 if(rank==0) {
@@ -54,45 +51,37 @@ y=10;
 
 //Generacja danych fraktala
 for(int i=0;i<2000000;i++) {
+        xtab[i] = x;
+        ytab[i] = y;
 
-xtab[i] = x;
-ytab[i] = y;
+        int los = rand()%100;
+        //printf("%d %d %lf %lf\n",i,los,x,y);
 
-int los = rand()%100;
-//printf("%d %d %lf %lf\n",i,los,x,y);
+        if(los<85) {tab = f(x,y);}
+        if(los>85 && los<92) {tab = g(x,y);}
+        if(los>92 && los<99) {tab = h(x,y);}
+        if(los==99) {tab = j(x,y);}
 
-if(los<85) {tab = f(x,y);}
-if(los>85 && los<92) {tab = g(x,y);}
-if(los>92 && los<99) {tab = h(x,y);}
-if(los==99) {tab = j(x,y);}
-
-x = tab[0];
-y = tab[1];
-
+        x = tab[0];
+        y = tab[1];
 }
 
 printf("Koniec generacji!\n");
 
 //Wysyłanie fraktala(jako double) do rendererów
 //To powinno być konfigurowalne
-for(int k=0;k<20;k++) {
-MPI_Send(xtab+k*100000,100000,MPI_DOUBLE,1,2*k+1,MPI_COMM_WORLD);
-MPI_Send(ytab+k*100000,100000,MPI_DOUBLE,1,2*k+2,MPI_COMM_WORLD);
-}
 
-for(int k=0;k<20;k++) {
-MPI_Send(xtab+k*100000,100000,MPI_DOUBLE,3,2*k+1,MPI_COMM_WORLD);
-MPI_Send(ytab+k*100000,100000,MPI_DOUBLE,3,2*k+2,MPI_COMM_WORLD);
-}
+int* senders = (int*)malloc(4*sizeof(int));
+senders[0] = 1;
+senders[1] = 3;
+senders[2] = 4;
+senders[3] = 5;
 
-for(int k=0;k<20;k++) {
-MPI_Send(xtab+k*100000,100000,MPI_DOUBLE,4,2*k+1,MPI_COMM_WORLD);
-MPI_Send(ytab+k*100000,100000,MPI_DOUBLE,4,2*k+2,MPI_COMM_WORLD);
-}
-
-for(int k=0;k<20;k++) {
-MPI_Send(xtab+k*100000,100000,MPI_DOUBLE,5,2*k+1,MPI_COMM_WORLD);
-MPI_Send(ytab+k*100000,100000,MPI_DOUBLE,5,2*k+2,MPI_COMM_WORLD);
+for(int j=0;j<sizeof(senders)/sizeof(int);j++) {
+        for(int k=0;k<20;k++) {
+                MPI_Send(xtab+k*100000,100000,MPI_DOUBLE,senders[j],2*k+1,MPI_COMM_WORLD);
+                MPI_Send(ytab+k*100000,100000,MPI_DOUBLE,senders[j],2*k+2,MPI_COMM_WORLD);
+        }
 }
 
 printf("Wysłano fraktal!\n");
@@ -109,8 +98,6 @@ int l=0;
 
 memset(xramka,'\0',2000000);
 memset(yramka,'\0',2000000);
-
-
 
     if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO) < 0 ) {
         fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
@@ -130,104 +117,27 @@ temp = SDL_CreateRGBSurface(SDL_HWSURFACE, 1024, 768, 16,
 
 for(int i=0;i<1000;i++) {
 
-//Rozmiar A
-MPI_Recv(&l,1,MPI_INT,1,10,MPI_COMM_WORLD,&status);
+int* senders = (int*)malloc(4*sizeof(int));
+senders[0] = 1;
+senders[1] = 3;
+senders[2] = 4;
+senders[3] = 5;
+
+for(int k=0;k<sizeof(senders)/sizeof(int);k++) {
+
+//Rozmiar ramki
+MPI_Recv(&l,1,MPI_INT,senders[k],senders[k]*10,MPI_COMM_WORLD,&status);
 printf("Rozmiar ramki %d Ramka %d\n",l,4*i);
 
-///Odbieranie ramki A 
+///Odbieranie ramki 
 for(int z=0;z<2000;z++) {
-MPI_Recv(xramka+z*1000,1000,MPI_INT,1,10000+2*z,MPI_COMM_WORLD,&status);
-MPI_Recv(yramka+z*1000,1000,MPI_INT,1,10000+2*z,MPI_COMM_WORLD,&status);
-
-if(z*1000>l) {break;}
-
+        MPI_Recv(xramka+z*1000,1000,MPI_INT,senders[k],senders[k]*10000+2*z,MPI_COMM_WORLD,&status);
+        MPI_Recv(yramka+z*1000,1000,MPI_INT,senders[k],senders[k]*10000+2*z,MPI_COMM_WORLD,&status);
+        if(z*1000>l) {break;}
 }
-printf("Odebrano A\n");
+printf("Odebrano %d\n",senders[k]);
 
-
-////Rysowanie ramki A
-for(int j=0;j<l;j++) {
-DrawPixel(temp,0,255,0,xramka[j],yramka[j]);
-
-
-}
-
-SDL_BlitSurface(temp, NULL, screen,NULL);
-SDL_Flip(screen);
-SDL_FillRect(temp, NULL, 0);
-
-printf("Narysowano A\n");
-
-
-///Rozmiar B
-MPI_Recv(&l,1,MPI_INT,3,30,MPI_COMM_WORLD,&status);
-printf("Rozmiar ramki %d Ramka %d\n",l,4*i+1);
-
-///Odbieranie ramki B
-for(int z=0;z<2000;z++) {
-MPI_Recv(xramka+z*1000,1000,MPI_INT,3,30000+2*z,MPI_COMM_WORLD,&status);
-MPI_Recv(yramka+z*1000,1000,MPI_INT,3,30000+2*z,MPI_COMM_WORLD,&status);
-
-if(z*1000>l) {break;}
-
-}
-printf("Odebrano B\n");
-
-//Rysowanie ramki B
-for(int j=0;j<l;j++) {
-DrawPixel(temp,0,255,0,xramka[j],yramka[j]);
-
-
-}
-
-SDL_BlitSurface(temp, NULL, screen,NULL);
-SDL_Flip(screen);
-SDL_FillRect(temp, NULL, 0);
-
-printf("Narysowano B\n");
-
-///Rozmiar C
-MPI_Recv(&l,1,MPI_INT,4,40,MPI_COMM_WORLD,&status);
-printf("Rozmiar ramki %d Ramka %d\n",l,4*i+2);
-
-///Odbieranie ramki C
-for(int z=0;z<2000;z++) {
-MPI_Recv(xramka+z*1000,1000,MPI_INT,4,40000+2*z,MPI_COMM_WORLD,&status);
-MPI_Recv(yramka+z*1000,1000,MPI_INT,4,40000+2*z,MPI_COMM_WORLD,&status);
-
-if(z*1000>l) {break;}
-
-
-}
-printf("Odebrano C\n");
-
-//Rysowanie ramki C
-for(int j=0;j<l;j++) {
-DrawPixel(temp,0,255,0,xramka[j],yramka[j]);
-
-
-}
-
-SDL_BlitSurface(temp, NULL, screen,NULL);
-SDL_Flip(screen);
-SDL_FillRect(temp, NULL, 0);
-
-
-///Rozmiar D
-MPI_Recv(&l,1,MPI_INT,5,50,MPI_COMM_WORLD,&status);
-printf("Rozmiar ramki %d Ramka %d\n",l,4*i+3);
-
-///Odbieranie ramki D
-for(int z=0;z<2000;z++) {
-MPI_Recv(xramka+z*1000,1000,MPI_INT,5,50000+2*z,MPI_COMM_WORLD,&status);
-MPI_Recv(yramka+z*1000,1000,MPI_INT,5,50000+2*z,MPI_COMM_WORLD,&status);
-
-if(z*1000>l) {break;}
-
-}
-printf("Odebrano D\n");
-
-//Rysowanie ramki D
+////Rysowanie ramki
 for(int j=0;j<l;j++) {
         DrawPixel(temp,0,255,0,xramka[j],yramka[j]);
 }
@@ -235,7 +145,11 @@ for(int j=0;j<l;j++) {
 SDL_BlitSurface(temp, NULL, screen,NULL);
 SDL_Flip(screen);
 SDL_FillRect(temp, NULL, 0);
-printf("Narysowano D\n");
+
+printf("Narysowano %d\n",senders[k]);
+
+}
+////////////////////////////////////////
 
 }
 
@@ -243,88 +157,68 @@ printf("Narysowano D\n");
 }
 
 if(rank!=0 && rank!=2) {
-    drawFrameSet(rank,4,status);
+    renderFrameSet(rank,4,status);
 }
-
-
-system("sleep 100");
+ 
+system("sleep 500");
 
 MPI_Finalize();
 return 0;
 }
 
 
-
-
-
 double* f(double x,double y) {
-double* out;
-out = (double*)malloc(2*sizeof(double));
-
-out[0] = 0.85*x + 0.04*y; 
-out[1] = -0.04*x + 0.85*y + 1.6;
-
-return out;
+        double* out;
+        out = (double*)malloc(2*sizeof(double));
+        out[0] = 0.85*x + 0.04*y; 
+        out[1] = -0.04*x + 0.85*y + 1.6;
+        return out;
 }
 
-
 double* g(double x,double y) {
-double* out;
-out = (double*)malloc(2*sizeof(double));
-
-out[0] = -0.15*x + 0.28*y; 
-out[1] = 0.26*x + 0.24*y + 0.44;
-
-return out;
+        double* out;
+        out = (double*)malloc(2*sizeof(double));
+        out[0] = -0.15*x + 0.28*y; 
+        out[1] = 0.26*x + 0.24*y + 0.44;
+        return out;
 }
 
 double* h(double x,double y) {
-double* out;
-out = (double*)malloc(2*sizeof(double));
-
-out[0] = 0.2*x - 0.26*y; 
-out[1] = 0.23*x + 0.22*y + 1.6;
-
-return out;
+        double* out;
+        out = (double*)malloc(2*sizeof(double));
+        out[0] = 0.2*x - 0.26*y; 
+        out[1] = 0.23*x + 0.22*y + 1.6;
+        return out;
 }
 
 double* j(double x,double y) {
-double* out;
-out = (double*)malloc(2*sizeof(double));
-
-out[0] = 0;
-out[1] = 0.16*y;
-
+        double* out;
+        out = (double*)malloc(2*sizeof(double));
+        out[0] = 0;
+        out[1] = 0.16*y;
 return out;
 }
 
 int DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x,int y)
 {
-
     Uint32 color = SDL_MapRGB(screen->format, R, G, B);
-
     if ( SDL_MUSTLOCK(screen) ) {
         if ( SDL_LockSurface(screen) < 0 ) {
             return 0;
         }
     }
-
             Uint16 *bufp;
             bufp = (Uint16 *)screen->pixels + y*screen->pitch/2 + x;
             *bufp = color;
-
     if ( SDL_MUSTLOCK(screen) ) {
         SDL_UnlockSurface(screen);
     }
-
     SDL_UpdateRect(screen, x, y, 1, 1);
 
-
-return 0;
-
+    return 0;
 }
 
-void drawFrameSet(int framesetId,int step,MPI_Status status) {
+void renderFrameSet(int framesetId,int step,MPI_Status status) {
 
     double* xxtab = (double*) malloc(2000000 * sizeof (double));
     double* yytab = (double*) malloc(2000000 * sizeof (double));
@@ -336,7 +230,6 @@ void drawFrameSet(int framesetId,int step,MPI_Status status) {
 
     memset(xramka, '\0', 2000000);
     memset(yramka, '\0', 2000000);
-
 
     for (int k = 0; k < 20; k++) {
         MPI_Recv(xxtab + k * 100000, 100000, MPI_DOUBLE, 0, 2 * k + 1, MPI_COMM_WORLD, &status);
@@ -354,21 +247,15 @@ void drawFrameSet(int framesetId,int step,MPI_Status status) {
         l = 0;
         count = 2000000;
         for (i = 0; i < count; i++) {
-
             int wspx = (int) skala * xxtab[i] + 500;
             int wspy = (int) skala * yytab[i] - yoffset;
-
             if (wspx > 0 && wspx < 1024 && wspy > 0 && wspy < 768) {
-
                 xramka[l] = wspx;
                 yramka[l] = wspy;
-
                 l++;
             }
-
             if (l > 500000)
                 break;
-
         }
 
         printf("Rendering zakończony!\n");
