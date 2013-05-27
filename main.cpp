@@ -4,6 +4,7 @@
 #include <math.h>
 #include <SDL.h>
 #include "mpi.h"
+#include "barnsley.h"
 
 using namespace std;
 
@@ -14,8 +15,6 @@ int rank,size,source,dest,tag,len;
 char name[20];
 
 int i;
-double x = 10;
-double y = 10;
 int skala;
 
 SDL_Surface *screen;
@@ -33,6 +32,15 @@ int main(int argc, char *argv[])
  srand(time(0));
 
 if(rank==0) {
+
+double *xtab;
+double *ytab;
+double** fractal;
+    
+Barnsley barnsley = Barnsley();
+fractal = barnsley.generate();  
+xtab = fractal[0];
+ytab = fractal[1];
 
 printf("Koniec generacji!\n");
 

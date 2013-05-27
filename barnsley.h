@@ -6,12 +6,12 @@ public:
     Barnsley();
     Barnsley(const Barnsley& orig);
     virtual ~Barnsley();
-    int* generate();
+    double** generate();
 private:
-    double f(double x,double y);
-    double g(double x,double y); 
-    double h(double x,double y);
-    double j(double x,double y);    
+    double* f(double x,double y);
+    double* g(double x,double y); 
+    double* h(double x,double y);
+    double* j(double x,double y);    
 };
 
 #endif	/* BARNSLEY_H */

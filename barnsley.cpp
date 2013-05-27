@@ -1,4 +1,6 @@
-#include "Barnsley.h"
+#include <stdlib.h>
+#include <string.h>
+#include "barnsley.h"
 
 Barnsley::Barnsley() {
 }
@@ -9,7 +11,9 @@ Barnsley::Barnsley(const Barnsley& orig) {
 Barnsley::~Barnsley() {
 }
 
-Barnsley::generate() {
+double** Barnsley::generate() {
+    double x;
+    double y;    
     double *xtab = (double*) malloc(2000000 * sizeof (double));
     double *ytab = (double*) malloc(2000000 * sizeof (double));
     double *tab = (double*) malloc(2 * sizeof (double));
@@ -37,9 +41,13 @@ Barnsley::generate() {
         x = tab[0];
         y = tab[1];
     }
+    double** output = (double**)malloc(2*sizeof(double*));
+    output[0] = xtab;
+    output[1] = ytab;
+    return output;
 }
 
-Barnsley::f(double x,double y) {
+double* Barnsley::f(double x,double y) {
         double* out;
         out = (double*)malloc(2*sizeof(double));
         out[0] = 0.85*x + 0.04*y; 
@@ -47,7 +55,7 @@ Barnsley::f(double x,double y) {
         return out;
 }
 
-Barnsley::g(double x,double y) {
+double* Barnsley::g(double x,double y) {
         double* out;
         out = (double*)malloc(2*sizeof(double));
         out[0] = -0.15*x + 0.28*y; 
@@ -55,7 +63,7 @@ Barnsley::g(double x,double y) {
         return out;
 }
 
-Barnsley::h(double x,double y) {
+double* Barnsley::h(double x,double y) {
         double* out;
         out = (double*)malloc(2*sizeof(double));
         out[0] = 0.2*x - 0.26*y; 
@@ -63,7 +71,7 @@ Barnsley::h(double x,double y) {
         return out;
 }
 
-Barnsley::j(double x,double y) {
+double* Barnsley::j(double x,double y) {
         double* out;
         out = (double*)malloc(2*sizeof(double));
         out[0] = 0;

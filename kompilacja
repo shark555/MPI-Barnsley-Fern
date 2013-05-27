@@ -1,1 +1,1 @@
-mpic++ prog2.cpp -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lSDL -lpthread -o prog2
+mpic++ main.cpp -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lSDL -lpthread -o main
