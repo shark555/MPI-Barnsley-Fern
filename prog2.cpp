@@ -9,10 +9,6 @@ using namespace std;
 
 int DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x,int y);
 void renderFrameSet(int framesetId,int step,MPI_Status status);
-double* f(double x,double y); 
-double* g(double x,double y); 
-double* h(double x,double y); 
-double* j(double x,double y); 
 
 int rank,size,source,dest,tag,len;
 char name[20];
@@ -34,37 +30,9 @@ int main(int argc, char *argv[])
  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
  MPI_Comm_size(MPI_COMM_WORLD,&size);
  MPI_Get_processor_name(name,&len);
-
  srand(time(0));
 
-
 if(rank==0) {
-
-double *xtab = (double*)malloc(2000000*sizeof(double));
-double *ytab = (double*)malloc(2000000*sizeof(double));
-double *tab = (double*)malloc(2*sizeof(double));
-memset(xtab,'\0',2000000);
-memset(ytab,'\0',2000000);
-
-x=10;
-y=10;
-
-//Generacja danych fraktala
-for(int i=0;i<2000000;i++) {
-        xtab[i] = x;
-        ytab[i] = y;
-
-        int los = rand()%100;
-        //printf("%d %d %lf %lf\n",i,los,x,y);
-
-        if(los<85) {tab = f(x,y);}
-        if(los>85 && los<92) {tab = g(x,y);}
-        if(los>92 && los<99) {tab = h(x,y);}
-        if(los==99) {tab = j(x,y);}
-
-        x = tab[0];
-        y = tab[1];
-}
 
 printf("Koniec generacji!\n");
 
@@ -164,39 +132,6 @@ system("sleep 500");
 
 MPI_Finalize();
 return 0;
-}
-
-
-double* f(double x,double y) {
-        double* out;
-        out = (double*)malloc(2*sizeof(double));
-        out[0] = 0.85*x + 0.04*y; 
-        out[1] = -0.04*x + 0.85*y + 1.6;
-        return out;
-}
-
-double* g(double x,double y) {
-        double* out;
-        out = (double*)malloc(2*sizeof(double));
-        out[0] = -0.15*x + 0.28*y; 
-        out[1] = 0.26*x + 0.24*y + 0.44;
-        return out;
-}
-
-double* h(double x,double y) {
-        double* out;
-        out = (double*)malloc(2*sizeof(double));
-        out[0] = 0.2*x - 0.26*y; 
-        out[1] = 0.23*x + 0.22*y + 1.6;
-        return out;
-}
-
-double* j(double x,double y) {
-        double* out;
-        out = (double*)malloc(2*sizeof(double));
-        out[0] = 0;
-        out[1] = 0.16*y;
-return out;
 }
 
 int DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x,int y)
