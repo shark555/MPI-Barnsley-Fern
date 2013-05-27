@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
  MPI_Comm_size(MPI_COMM_WORLD,&size);
  MPI_Get_processor_name(name,&len);
  srand(time(0));
+ printf("%s\n",name);
 
 if(rank==0) {
 
@@ -48,7 +49,7 @@ printf("Koniec generacji!\n");
 //To powinno być konfigurowalne
 
 int* senders = (int*)malloc(4*sizeof(int));
-senders[0] = 1;
+senders[0] = 2;
 senders[1] = 3;
 senders[2] = 4;
 senders[3] = 5;
@@ -66,7 +67,7 @@ MPI_Finalize();
 
 }
 
-if(rank==2) {
+if(rank==1) {
 
 int* xramka = (int*)malloc(2000000*sizeof(int));
 int* yramka = (int*)malloc(2000000*sizeof(int));
@@ -94,7 +95,7 @@ temp = SDL_CreateRGBSurface(SDL_HWSURFACE, 1024, 768, 16,
 for(int i=0;i<1000;i++) {
 
 int* senders = (int*)malloc(4*sizeof(int));
-senders[0] = 1;
+senders[0] = 2;
 senders[1] = 3;
 senders[2] = 4;
 senders[3] = 5;
@@ -132,7 +133,7 @@ printf("Narysowano %d\n",senders[k]);
 
 }
 
-if(rank!=0 && rank!=2) {
+if(rank>1) {
     renderFrameSet(rank,4,status);
 }
  
@@ -205,15 +206,15 @@ void renderFrameSet(int framesetId,int step,MPI_Status status) {
 
         ///Wysyłanie ramki
         for (int z = 0; z < 2000; z++) {
-            MPI_Send(xramka + z * 1000, 1000, MPI_INT, 2, framesetId*10000 + 2*z, MPI_COMM_WORLD);
-            MPI_Send(yramka + z * 1000, 1000, MPI_INT, 2, framesetId*10000 + 2*z, MPI_COMM_WORLD);
+            MPI_Send(xramka + z * 1000, 1000, MPI_INT, 1, framesetId*10000 + 2*z, MPI_COMM_WORLD);
+            MPI_Send(yramka + z * 1000, 1000, MPI_INT, 1, framesetId*10000 + 2*z, MPI_COMM_WORLD);
             if (z * 1000 > l) {
                 break;
             }
         }
 
         printf("Wysłano ramke %d\n",framesetId);
-        MPI_Send(&l, 1, MPI_INT, 2, framesetId*10, MPI_COMM_WORLD);
+        MPI_Send(&l, 1, MPI_INT, 1, framesetId*10, MPI_COMM_WORLD);
 
         skala = 50 + 4 * j;
         yoffset = 10 + 20 * j;

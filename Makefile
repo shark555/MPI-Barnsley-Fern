@@ -7,3 +7,6 @@ barnsley.o: barnsley.cpp barnsley.h
 
 main.o: main.cpp
 	mpic++ -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lSDL -c main.cpp
+
+clean:
+	@rm -fr *.o main
