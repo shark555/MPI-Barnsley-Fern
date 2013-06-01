@@ -2,7 +2,8 @@
 #include <string.h>
 #include "barnsley.h"
 
-Barnsley::Barnsley() {
+Barnsley::Barnsley(int size_v) {
+    this->size = size_v;
 }
 
 Barnsley::Barnsley(const Barnsley& orig) {
@@ -14,15 +15,13 @@ Barnsley::~Barnsley() {
 double** Barnsley::generate() {
     double x;
     double y;    
-    double *xtab = (double*) malloc(2000000 * sizeof (double));
-    double *ytab = (double*) malloc(2000000 * sizeof (double));
+    double *xtab = (double*) malloc(size * sizeof (double));
+    double *ytab = (double*) malloc(size * sizeof (double));
     double *tab = (double*) malloc(2 * sizeof (double));
-    memset(xtab, '\0', 2000000);
-    memset(ytab, '\0', 2000000);
     x = 10;
     y = 10;
     //Generacja danych fraktala
-    for (int i = 0; i < 2000000; i++) {
+    for (int i = 0; i < size; i++) {
         xtab[i] = x;
         ytab[i] = y;
         int los = rand() % 100;

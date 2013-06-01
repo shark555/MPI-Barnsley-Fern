@@ -16,6 +16,9 @@ int i;
 
 int main(int argc, char *argv[]) {
 
+    int datasize = 2000000;  
+    int framecount = 1000;
+    
     MPI_Status status;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -24,22 +27,24 @@ int main(int argc, char *argv[]) {
     srand(time(0));
     printf("%s\n", name);
 
+    ///Generacja fraktala
     if (rank == 0) {
 
         double *xtab;
         double *ytab;
         double** fractal;
-
-        Barnsley barnsley = Barnsley();
+        
+        Barnsley barnsley = Barnsley(datasize);
         fractal = barnsley.generate();
         xtab = fractal[0];
         ytab = fractal[1];
 
         printf("Koniec generacji!\n");
-
+        
+        //Wysyłanie danych do kolejnych rendererów (startuje od 2 bo 0 i 1 to główne workery)
         for (int j = 2; j<size; j++) {
-                MPI_Send(xtab, 2000000, MPI_DOUBLE, j, 1, MPI_COMM_WORLD);
-                MPI_Send(ytab, 2000000, MPI_DOUBLE, j, 2, MPI_COMM_WORLD);            
+                MPI_Send(xtab, datasize, MPI_DOUBLE, j, 1, MPI_COMM_WORLD);
+                MPI_Send(ytab, datasize, MPI_DOUBLE, j, 2, MPI_COMM_WORLD);            
         }
 
         printf("Wysłano fraktal!\n");
@@ -48,45 +53,38 @@ int main(int argc, char *argv[]) {
 
     }
 
+    //Rysowanie na SDLu
     if (rank == 1) {
 
-        int* xramka = (int*) malloc(2000000 * sizeof (int));
-        int* yramka = (int*) malloc(2000000 * sizeof (int));
+        int* xramka = (int*) malloc(datasize * sizeof (int));
+        int* yramka = (int*) malloc(datasize * sizeof (int));
         int l = 0;
-
-        memset(xramka, '\0', 2000000);
-        memset(yramka, '\0', 2000000);
 
         Drawer drawer = Drawer(1024,768,0,255,100);
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < framecount; i++) {
             
             int* senders = (int*) malloc(4 * sizeof (int));
             for(int k=2;k<size;k++) {
                 senders[k-2] = k;
             }
 
-            for (int k = 0; k<sizeof (senders) / sizeof (int); k++) {
-
+            for (int k = 0; k<sizeof (senders) / sizeof (int); k++) {                
                 //Rozmiar ramki
                 MPI_Recv(&l, 1, MPI_INT, senders[k], senders[k]*10, MPI_COMM_WORLD, &status);
-                printf("Rozmiar ramki %d Ramka %d\n", l, 4 * i);
-
+                //printf("Rozmiar ramki %d Ramka %d\n", l, 4 * i);
                 ///Odbieranie ramki 
                 //Zamienić to na pojedynczy recv całej tablicy
-                for (int z = 0; z < 2000; z++) {
+                for (int z = 0; z < datasize/1000; z++) {
                     MPI_Recv(xramka + z * 1000, 1000, MPI_INT, senders[k], senders[k]*10000 + 2 * z, MPI_COMM_WORLD, &status);
                     MPI_Recv(yramka + z * 1000, 1000, MPI_INT, senders[k], senders[k]*10000 + 2 * z, MPI_COMM_WORLD, &status);
                     if (z * 1000 > l) {
                         break;
                     }
-                }
+                }                                           
                 printf("Odebrano %d\n", senders[k]);
-
                 drawer.drawFrame(xramka, yramka, l);
-
                 printf("Narysowano %d\n", senders[k]);
-
             }
             ////////////////////////////////////////
 
@@ -95,8 +93,9 @@ int main(int argc, char *argv[]) {
 
     }
 
+    //Rendering
     if (rank > 1) {
-        Renderer renderer = Renderer(4,1024,768);
+        Renderer renderer = Renderer(size-2,1024,768,1000,2000000);
         renderer.renderFrameSet(rank);
     }
 
