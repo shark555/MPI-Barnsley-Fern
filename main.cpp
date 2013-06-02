@@ -16,9 +16,13 @@ int i;
 
 int main(int argc, char *argv[]) {
 
+    /*
     int datasize = 2000000;  
     int framecount = 1000;
-    
+    */   
+    int datasize = atoi(argv[1]);  
+    int framecount = atoi(argv[2]);  
+ 
     MPI_Status status;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -60,11 +64,11 @@ int main(int argc, char *argv[]) {
         int* yramka = (int*) malloc(datasize * sizeof (int));
         int l = 0;
 
-        Drawer drawer = Drawer(1024,768,0,255,100);
+        Drawer drawer = Drawer(640,480,0,255,100);
 
         for (int i = 0; i < framecount; i++) {
             
-            int* senders = (int*) malloc(4 * sizeof (int));
+            int* senders = (int*) malloc((size-2) * sizeof (int));
             for(int k=2;k<size;k++) {
                 senders[k-2] = k;
             }
@@ -76,8 +80,8 @@ int main(int argc, char *argv[]) {
                 ///Odbieranie ramki 
                 //Zamienić to na pojedynczy recv całej tablicy
                 for (int z = 0; z < datasize/1000; z++) {
-                    MPI_Recv(xramka + z * 1000, 1000, MPI_INT, senders[k], senders[k]*10000 + 2 * z, MPI_COMM_WORLD, &status);
-                    MPI_Recv(yramka + z * 1000, 1000, MPI_INT, senders[k], senders[k]*10000 + 2 * z, MPI_COMM_WORLD, &status);
+                    MPI_Recv(xramka + z * 1000, 1000, MPI_INT, senders[k], senders[k]*100000 + 2 * z, MPI_COMM_WORLD, &status);
+                    MPI_Recv(yramka + z * 1000, 1000, MPI_INT, senders[k], senders[k]*100000 + 2 * z, MPI_COMM_WORLD, &status);
                     if (z * 1000 > l) {
                         break;
                     }
@@ -95,11 +99,11 @@ int main(int argc, char *argv[]) {
 
     //Rendering
     if (rank > 1) {
-        Renderer renderer = Renderer(size-2,1024,768,1000,2000000);
+        Renderer renderer = Renderer(size-2,640,480,framecount,datasize);
         renderer.renderFrameSet(rank);
     }
 
-    system("sleep 500");
+    system("sleep 100");
 
     MPI_Finalize();
     return 0;
