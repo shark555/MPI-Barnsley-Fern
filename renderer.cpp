@@ -14,7 +14,7 @@ Renderer::Renderer(const Renderer& orig) {
 Renderer::~Renderer() {
 }
 
-void Renderer::renderFrameSet(int framesetId) {
+void Renderer::renderFrameSet(int rank) {
 
     MPI_Status status;
     int skala;    
@@ -36,8 +36,10 @@ void Renderer::renderFrameSet(int framesetId) {
     int yoffset = 10;
     int j, l;
 
-    for (j = framesetId; j < framecount; j += step) {
+    for (j = rank-2; j < framecount; j += step) {
 
+        //printf("%d -> %d\n",framesetId,j);
+        
         ///Generacja ramki
         l = 0;
         for (int i = 0; i < framesize; i++) {
@@ -52,19 +54,21 @@ void Renderer::renderFrameSet(int framesetId) {
                 break;
         }
 
-        printf("Rendering zakończony!\n");
-
+        //printf("Rendering zakończony!\n");
         ///Wysyłanie ramki
+        
+        MPI_Send(&l, 1, MPI_INT, 1, j, MPI_COMM_WORLD);        
+        
         for (int z = 0; z < framesize/1000; z++) {
-            MPI_Send(xramka + z * 1000, 1000, MPI_INT, 1, framesetId*10000 + 2*z, MPI_COMM_WORLD);
-            MPI_Send(yramka + z * 1000, 1000, MPI_INT, 1, framesetId*10000 + 2*z, MPI_COMM_WORLD);
+            MPI_Send(xramka + z * 1000, 1000, MPI_INT, 1, j*(framesize/1000)+z, MPI_COMM_WORLD);
+            MPI_Send(yramka + z * 1000, 1000, MPI_INT, 1, j*(framesize/1000)+z, MPI_COMM_WORLD);
+            printf("Wysyłam paczkę %d od %d\n",(rank-2)*(framesize/1000)+z,rank);
             if (z * 1000 > l) {
                 break;
             }
         }
 
-        printf("Wysłano ramke %d\n",framesetId);
-        MPI_Send(&l, 1, MPI_INT, 1, framesetId*10, MPI_COMM_WORLD);
+        printf("Wysłano ramke %d - wygenerował worker %d - ID:%d\n",j,rank,j);
 
         skala = 50 + 4 * j;
         yoffset = 10 + 20 * j;

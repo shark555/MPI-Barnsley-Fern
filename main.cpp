@@ -5,6 +5,8 @@
 #include "mpi.h"
 #include "barnsley.h"
 #include "drawer.h"
+#include "pngdrawer.h"
+#include<string.h>
 #include "renderer.h"
 
 using namespace std;
@@ -43,7 +45,7 @@ int main(int argc, char *argv[]) {
         xtab = fractal[0];
         ytab = fractal[1];
 
-        printf("Koniec generacji!\n");
+        //printf("Koniec generacji!\n");
         
         //Wysyłanie danych do kolejnych rendererów (startuje od 2 bo 0 i 1 to główne workery)
         for (int j = 2; j<size; j++) {
@@ -51,9 +53,7 @@ int main(int argc, char *argv[]) {
                 MPI_Send(ytab, datasize, MPI_DOUBLE, j, 2, MPI_COMM_WORLD);            
         }
 
-        printf("Wysłano fraktal!\n");
-
-        MPI_Finalize();
+        //printf("Wysłano fraktal!\n");
 
     }
 
@@ -65,36 +65,40 @@ int main(int argc, char *argv[]) {
         int l = 0;
 
         Drawer drawer = Drawer(640,480,0,255,100);
-
-        for (int i = 0; i < framecount; i++) {
-            
-            int* senders = (int*) malloc((size-2) * sizeof (int));
-            for(int k=2;k<size;k++) {
-                senders[k-2] = k;
-            }
-
-            for (int k = 0; k<sizeof (senders) / sizeof (int); k++) {                
+//        PngDrawer drawer = PngDrawer(1024,768);            
+        
+        int allframes = 0;
+        for (int i = 0; i < framecount; i=i+(size-2)) {
+                       
+            for (int k = 2; k<size; k++) {                
                 //Rozmiar ramki
-                MPI_Recv(&l, 1, MPI_INT, senders[k], senders[k]*10, MPI_COMM_WORLD, &status);
-                //printf("Rozmiar ramki %d Ramka %d\n", l, 4 * i);
+                MPI_Recv(&l, 1, MPI_INT, k, i+k-2, MPI_COMM_WORLD, &status);
+                printf("Odbieram ramkę od %d o ID:%d\n",k, i+k-2);                
+                printf("Rozmiar ramki %d - %d\n",i+k-2, l);
+                
                 ///Odbieranie ramki 
-                //Zamienić to na pojedynczy recv całej tablicy
                 for (int z = 0; z < datasize/1000; z++) {
-                    MPI_Recv(xramka + z * 1000, 1000, MPI_INT, senders[k], senders[k]*100000 + 2 * z, MPI_COMM_WORLD, &status);
-                    MPI_Recv(yramka + z * 1000, 1000, MPI_INT, senders[k], senders[k]*100000 + 2 * z, MPI_COMM_WORLD, &status);
+                    MPI_Recv(xramka + z * 1000, 1000, MPI_INT, k, (i+k-2)*(datasize/1000)+z, MPI_COMM_WORLD, &status);
+                    MPI_Recv(yramka + z * 1000, 1000, MPI_INT, k, (i+k-2)*(datasize/1000)+z, MPI_COMM_WORLD, &status);
                     if (z * 1000 > l) {
                         break;
                     }
-                }                                           
-                printf("Odebrano %d\n", senders[k]);
+                } 
+                                
                 drawer.drawFrame(xramka, yramka, l);
-                printf("Narysowano %d\n", senders[k]);
+                //char* filename = (char*)malloc(10*sizeof(char));                
+                //sprintf(filename,"images/%d.png",allframes);
+                
+                //drawer.writeImage(filename);
+                //printf("Narysowano %d\n", allframes);                
+                //printf("Narysowano %d\n", senders[k]);
+                allframes++;                
             }
             ////////////////////////////////////////
 
         }
 
-
+        
     }
 
     //Rendering
@@ -103,7 +107,7 @@ int main(int argc, char *argv[]) {
         renderer.renderFrameSet(rank);
     }
 
-    system("sleep 100");
+    system("sleep 1");
 
     MPI_Finalize();
     return 0;
