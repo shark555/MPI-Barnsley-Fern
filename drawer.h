@@ -14,7 +14,7 @@ private:
     TTF_Font *font = NULL;
     int drawPixel(Uint8 R, Uint8 G, Uint8 B, int x,int y);
     void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination);
-    void drawFrameId(int frame_id);
+    void drawFrameInfo(int frame_id,int size);
 };
 
 #endif	/* DRAWER_H */

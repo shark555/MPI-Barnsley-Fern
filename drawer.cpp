@@ -34,7 +34,7 @@ int Drawer::drawFrame(int* xframe,int* yframe,int size,int frame_id) {
         SDL_BlitSurface(surface, NULL, screen,NULL);   
         SDL_Flip(screen);        
         SDL_FillRect(surface, NULL, 0);
-        drawFrameId(frame_id);
+        drawFrameInfo(frame_id,size);
         return 0;
 }
 
@@ -65,9 +65,9 @@ void Drawer::apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* dest
     SDL_BlitSurface( source, NULL, destination, &offset );
 }
 
-void Drawer::drawFrameId(int frame_id) {
+void Drawer::drawFrameInfo(int frame_id,int size) {
      char* text  = (char*)malloc(10*sizeof(char)); 
-     sprintf(text,"%d",frame_id);
+     sprintf(text,"%d - %d",frame_id,size);
      message = TTF_RenderText_Solid(font,text ,{255,255,255});  
      apply_surface( 5, 5, message, surface );     
 }
