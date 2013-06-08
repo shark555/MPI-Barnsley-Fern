@@ -2,29 +2,32 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
+#include <jansson.h> 
 #include "mpi.h"
 #include "barnsley.h"
 #include "drawer.h"
-#include "pngdrawer.h"
-#include<string.h>
 #include "renderer.h"
 
 using namespace std;
 
 int rank, size, source, dest, tag, len;
+int i;
 char name[20];
 
-int i;
+//OPTIONS
+int width,height;
+char* drawerAlgo;
+
+void populateOptions();
 
 int main(int argc, char *argv[]) {
-
-    /*
-    int datasize = 2000000;  
-    int framecount = 1000;
-    */   
+        
+    populateOptions();        
+    
     int datasize = atoi(argv[1]);  
     int framecount = atoi(argv[2]);  
- 
+         
     MPI_Status status;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -57,17 +60,15 @@ int main(int argc, char *argv[]) {
 
     }
 
-    //Rysowanie na SDLu
+    //Rysowanie
     if (rank == 1) {
-
+        
         int* xramka = (int*) malloc(datasize * sizeof (int));
         int* yramka = (int*) malloc(datasize * sizeof (int));
         int l = 0;
 
-        Drawer drawer = Drawer(640,480,0,255,100);
-//        PngDrawer drawer = PngDrawer(1024,768);            
+        Drawer* drawer = Drawer::getInstance(drawerAlgo,width,height,255,0,100);         
         
-        int allframes = 0;
         for (int i = 0; i < framecount; i=i+(size-2)) {
                        
             for (int k = 2; k<size; k++) {                
@@ -85,25 +86,18 @@ int main(int argc, char *argv[]) {
                     }
                 } 
                                 
-                drawer.drawFrame(xramka, yramka, l);
-                //char* filename = (char*)malloc(10*sizeof(char));                
-                //sprintf(filename,"images/%d.png",allframes);
-                
-                //drawer.writeImage(filename);
-                //printf("Narysowano %d\n", allframes);                
-                //printf("Narysowano %d\n", senders[k]);
-                allframes++;                
+                drawer->drawFrame(xramka, yramka, l,i+k-2);                
+                printf("Narysowano %d\n", i+k-2);                
             }
             ////////////////////////////////////////
 
         }
-
         
     }
 
     //Rendering
     if (rank > 1) {
-        Renderer renderer = Renderer(size-2,640,480,framecount,datasize);
+        Renderer renderer = Renderer(size-2,width,height,framecount,datasize);
         renderer.renderFrameSet(rank);
     }
 
@@ -113,3 +107,20 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+void populateOptions() {
+    
+    json_error_t error;
+    json_t *json,*width_ob,*height_ob,*drawer_ob;
+    
+    json = json_load_file("config.json", 0, &error);
+
+    if(json) {
+        width_ob = json_object_get(json,"width");
+        width = (int)json_integer_value(width_ob);
+        height_ob = json_object_get(json,"height");
+        height = (int)json_integer_value(height_ob);  
+        drawer_ob = json_object_get(json,"drawer");
+        drawerAlgo = (char*)json_string_value(drawer_ob);        
+    }
+
+}

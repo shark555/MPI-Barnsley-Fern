@@ -37,8 +37,6 @@ void Renderer::renderFrameSet(int rank) {
     int j, l;
 
     for (j = rank-2; j < framecount; j += step) {
-
-        //printf("%d -> %d\n",framesetId,j);
         
         ///Generacja ramki
         l = 0;
@@ -53,9 +51,6 @@ void Renderer::renderFrameSet(int rank) {
             if (l > 500000)
                 break;
         }
-
-        //printf("Rendering zakończony!\n");
-        ///Wysyłanie ramki
         
         MPI_Send(&l, 1, MPI_INT, 1, j, MPI_COMM_WORLD);        
         

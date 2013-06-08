@@ -1,8 +1,11 @@
 #include "pngdrawer.h"
 
-PngDrawer::PngDrawer(int width_v,int height_v) {
+PngDrawer::PngDrawer(int width_v,int height_v,int r_v,int g_v,int b_v) {
     width = width_v;
     height = height_v;
+    r = r_v;
+    g = g_v;
+    b = b_v;
     buffer = (float*)malloc(width*height*sizeof(float));
 }
 
@@ -118,6 +121,9 @@ int PngDrawer::drawFrame(int* xframe,int* yframe,int size,int frame_id) {
         for(int i=0;i<size;i++) {
                 drawPixel(xframe[i],yframe[i],0.5);
         }
+        char* filename = (char*)malloc(10*sizeof(char));                
+        sprintf(filename,"images/%d.png",frame_id);                
+        writeImage(filename);        
         return 0;
 }
 
