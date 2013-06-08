@@ -6,11 +6,12 @@
 
 class SDLDrawer : public Drawer {
 public:
-    SDLDrawer(int width,int height,int r,int g,int b);
+    SDLDrawer(int width,int height,int r,int g,int b,int framecount);
     virtual ~SDLDrawer();
     int drawFrame(int* xframe,int* yframe,int size,int frame_id);
 private:
     int r,g,b;
+    int framecount;
     SDL_Surface *screen,*surface,*message;
     TTF_Font *font = NULL;
     int drawPixel(Uint8 R, Uint8 G, Uint8 B, int x,int y);

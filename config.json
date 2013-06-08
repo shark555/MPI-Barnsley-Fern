@@ -1,5 +1,10 @@
 {
- "width": 800,
- "height": 600,
- "drawer": "PNG"
+ "width": 640,
+ "height": 480,
+ "drawer": "PNG",
+ "color" : {
+    "r" : 255,
+    "g" : 0,
+    "b" : 0
+  }
 }

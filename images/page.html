@@ -1,0 +1,49 @@
+<script> 
+<!-- 
+
+var i=0;
+
+function display(){ 
+
+setTimeout('refresh()',10) ;
+
+}
+ 
+
+function refresh() {
+
+//location.reload(true);
+var j = i;
+var k = 3*i+1;
+var l = 3*i+2;
+document.images.obraz.src = j+'.png';
+///document.images.obraz.src = 'obraz.png'+k;
+//document.images.obraz.src = 'obraz.png'+l;
+//document.images.obraz.src = document.images.obraz.src + '?' + i;
+//document.images.obraz2.src = document.images.obraz2.src + '?' + i;
+document.getElementById("napis").innerHTML=i;
+
+i++;
+
+if(i==1000)
+    return;
+
+display();
+}
+
+display(); 
+
+--> 
+</script> 
+
+
+<body>
+
+
+
+<img name="obraz" height=600 width=800 src="obraz.png">
+<span id="napis"></span>
+
+
+</body>
+

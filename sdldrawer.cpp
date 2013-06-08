@@ -1,6 +1,6 @@
 #include "sdldrawer.h"
 
-SDLDrawer::SDLDrawer(int width,int height,int r_v,int g_v,int b_v) {
+SDLDrawer::SDLDrawer(int width,int height,int r_v,int g_v,int b_v,int framecount_v) {
     if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO) < 0 ) {
         fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
         exit(1);
@@ -14,10 +14,11 @@ SDLDrawer::SDLDrawer(int width,int height,int r_v,int g_v,int b_v) {
     TTF_Init();
     font = TTF_OpenFont( "Vera.ttf", 15 );   
     surface = SDL_CreateRGBSurface(SDL_HWSURFACE, width, height, 16,NULL, NULL, NULL, NULL); 
+    SDL_WM_SetCaption( "Paproć Barnsleya", NULL );
     this->r = r_v;
     this->g = g_v;
     this->b = b_v;   
-
+    this->framecount = framecount_v;
 }
 
 SDLDrawer::~SDLDrawer() {
@@ -28,14 +29,27 @@ SDLDrawer::~SDLDrawer() {
 }
 
 int SDLDrawer::drawFrame(int* xframe,int* yframe,int size,int frame_id) {           
-        for(int i=0;i<size;i++) {
+    for(int i=0;i<size;i++) {
                 drawPixel(r,g,b,xframe[i],yframe[i]);
+    }
+    SDL_BlitSurface(surface, NULL, screen,NULL);   
+    SDL_Flip(screen);        
+    SDL_FillRect(surface, NULL, 0);
+    drawFrameInfo(frame_id,size);
+    
+    if (framecount - 1 == frame_id) {             
+        bool quit = false;
+        SDL_Event event;
+        while (quit == false) {
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    quit = true;
+                }
+            }
         }
-        SDL_BlitSurface(surface, NULL, screen,NULL);   
-        SDL_Flip(screen);        
-        SDL_FillRect(surface, NULL, 0);
-        drawFrameInfo(frame_id,size);
-        return 0;
+    }
+    
+    return 0;
 }
 
 int SDLDrawer::drawPixel(Uint8 R, Uint8 G, Uint8 B, int x,int y)

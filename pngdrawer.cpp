@@ -16,24 +16,6 @@ PngDrawer::~PngDrawer() {
     free(buffer);
 }
 
-void PngDrawer::setRGB(png_byte *ptr, float val)
-{
-	int v = (int)(val * 768);
-	if (v < 0) v = 0;
-	if (v > 768) v = 768;
-	int offset = v % 256;
-
-	if (v<256) {
-		ptr[0] = 0; ptr[1] = 0; ptr[2] = offset;
-	}
-	else if (v<512) {
-		ptr[0] = 0; ptr[1] = offset; ptr[2] = 255-offset;
-	}
-	else {
-		ptr[0] = offset; ptr[1] = 255-offset; ptr[2] = 0;
-	}
-}
-
 int PngDrawer::writeImage(char* filename)
 {
 	int code = 0;
@@ -89,7 +71,15 @@ int PngDrawer::writeImage(char* filename)
 	int x, y;
 	for (y=0 ; y<height ; y++) {
 		for (x=0 ; x<width ; x++) {
-			setRGB(&(row[x*3]), buffer[y*width + x]);
+			if(buffer[y*width + x]==1) {
+                            row[3*x] = r;
+                            row[3*x+1] = g;
+                            row[3*x+2] = b;                            
+                        } else {
+                            row[3*x] = 0;
+                            row[3*x+1] = 0;
+                            row[3*x+2] = 0;                            
+                        }
 		}
 		png_write_row(png_ptr, row);
 	}
@@ -119,7 +109,7 @@ int PngDrawer::drawFrame(int* xframe,int* yframe,int size,int frame_id) {
             buffer[i] = 0.0;
         }
         for(int i=0;i<size;i++) {
-                drawPixel(xframe[i],yframe[i],0.5);
+                drawPixel(xframe[i],yframe[i],1);
         }
         char* filename = (char*)malloc(10*sizeof(char));                
         sprintf(filename,"images/%d.png",frame_id);                

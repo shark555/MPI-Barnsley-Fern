@@ -19,7 +19,6 @@ private:
     int r,g,b;
     float *buffer;
     int writeImage(char* filename);    
-    void  setRGB(png_byte *ptr, float val);
 };
 
 #endif  /* PNGDRAWER_H */

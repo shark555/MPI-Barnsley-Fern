@@ -17,6 +17,7 @@ char name[20];
 
 //OPTIONS
 int width,height;
+int color_r,color_g,color_b;
 char* drawerAlgo;
 
 void populateOptions();
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]) {
         int* yramka = (int*) malloc(datasize * sizeof (int));
         int l = 0;
 
-        Drawer* drawer = Drawer::getInstance(drawerAlgo,width,height,255,0,100);         
+        Drawer* drawer = Drawer::getInstance(drawerAlgo,width,height,color_r,color_g,color_b,framecount);         
         
         for (int i = 0; i < framecount; i=i+(size-2)) {
                        
@@ -110,17 +111,27 @@ int main(int argc, char *argv[]) {
 void populateOptions() {
     
     json_error_t error;
-    json_t *json,*width_ob,*height_ob,*drawer_ob;
+    json_t *json,*width_ob,*height_ob,*drawer_ob,*color_ob,*color_r_ob,*color_g_ob,*color_b_ob;
     
     json = json_load_file("config.json", 0, &error);
 
     if(json) {
+        //Dimensions
         width_ob = json_object_get(json,"width");
-        width = (int)json_integer_value(width_ob);
+        width = (int)json_integer_value(width_ob);        
         height_ob = json_object_get(json,"height");
         height = (int)json_integer_value(height_ob);  
+        //Drawer algorithm
         drawer_ob = json_object_get(json,"drawer");
         drawerAlgo = (char*)json_string_value(drawer_ob);        
+        //Color
+        color_ob = json_object_get(json,"color"); 
+        color_r_ob = json_object_get(color_ob,"r");
+        color_g_ob = json_object_get(color_ob,"g");
+        color_b_ob = json_object_get(color_ob,"b");  
+        color_r = (int)json_integer_value(color_r_ob);
+        color_g = (int)json_integer_value(color_g_ob);  
+        color_b = (int)json_integer_value(color_b_ob);          
     }
 
 }
