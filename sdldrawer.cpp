@@ -12,7 +12,7 @@ SDLDrawer::SDLDrawer(int width,int height,int r_v,int g_v,int b_v,int framecount
         exit(1);
     }
     TTF_Init();
-    font = TTF_OpenFont( "Vera.ttf", 15 );   
+    font = TTF_OpenFont( "fonts/Vera.ttf", 15 );   
     surface = SDL_CreateRGBSurface(SDL_HWSURFACE, width, height, 16,NULL, NULL, NULL, NULL); 
     SDL_WM_SetCaption( "Paproć Barnsleya", NULL );
     this->r = r_v;
