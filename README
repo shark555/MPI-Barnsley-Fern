@@ -1,0 +1,1 @@
+Running: mpirun -np 4 ./main POINTS_COUNT FRAMES_COUNT
